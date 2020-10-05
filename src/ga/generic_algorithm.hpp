@@ -1,0 +1,4 @@
+#ifndef GA_GENERIC_ALGORITHM_HPP
+#define GA_GENERIC_ALGORITHM_HPP
+
+#endif
