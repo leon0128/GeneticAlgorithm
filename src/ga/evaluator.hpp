@@ -30,6 +30,7 @@ public:
         , int difference) noexcept;
     
     static std::size_t score() noexcept;
+    static std::size_t score(const Output&) noexcept;
 };
 
 }

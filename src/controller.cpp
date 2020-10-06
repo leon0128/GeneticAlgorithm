@@ -1,3 +1,5 @@
+#include "ga/genetic_algorithm.hpp"
+
 #include "controller.hpp"
 #include "back_ground.hpp"
 #include "game_board.hpp"
@@ -58,7 +60,7 @@ void Controller::createGameActor(Controller::EState state)
             pause->addGameBoard(gameBoard);
             mPairVector.emplace_back(PLAYING, pause);
             mPairVector.emplace_back(PLAYING, gameBoard);
-            mPairVector.emplace_back(PLAYING, new BackGround(mGame));
+            // mPairVector.emplace_back(PLAYING, new BackGround(mGame));
             break;
         
         default:

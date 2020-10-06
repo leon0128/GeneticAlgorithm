@@ -1,28 +1,33 @@
 #ifndef GA_OUTPUT_HPP
 #define GA_OUTPUT_HPP
 
+#include <array>
+
 namespace GA
 {
 
 class Output
 {
 public:
-    constexpr Output(int inNumUsedBlock = 0
-        , int inNumTetris = 0
-        , int inNum3Lines = 0
-        , int inNum2Lines = 0
-        , int inNum1Line = 0) noexcept
-        : numUsedBlock(inNumUsedBlock)
-        , numTetris(inNumTetris)
-        , num3Lines(inNum3Lines)
-        , num2Lines(inNum2Lines)
-        , num1Line(inNum1Line){}
+    enum
+    {
+        NUM_USED_BLOCK
+        , NUM_TETRIS
+        , NUM_THREE_LINES
+        , NUM_TWO_LINES
+        , NUM_ONW_LINE
+        , ARRAY_SIZE
+    };
+
+    constexpr Output(const std::array<int, ARRAY_SIZE> &inArr = std::array<int, ARRAY_SIZE>())
+        : array(inArr){}
     
-    int numUsedBlock;
-    int numTetris;
-    int num3Lines;
-    int num2Lines;
-    int num1Line;
+    int &operator [](std::size_t idx)
+        {return array[idx];}
+    const int &operator [](std::size_t idx) const
+        {return array[idx];}
+    
+    std::array<int, ARRAY_SIZE> array;
 };
 
 }

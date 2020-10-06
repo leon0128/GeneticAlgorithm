@@ -11,7 +11,7 @@ const int Evaluator::THREE_LINES_SCORE_MULTIPLE = 6;
 const int Evaluator::TWO_LINES_SCORE_MULTIPLE = 3;
 const int Evaluator::ONE_LINE_SCORE_MULTIPLE = 1;
 
-Input Evaluator::INPUT = Input(0, {1, 1}, {10, 10}, {1, 1}, {1, 1});
+Input Evaluator::INPUT = Input();
 Output Evaluator::OUTPUT = Output();
 
 double Evaluator::evaluate(int preMaxHeight
@@ -20,23 +20,36 @@ double Evaluator::evaluate(int preMaxHeight
     , int maxHeight
     , int difference) noexcept
 {
-    std::size_t idx = preMaxHeight < INPUT.turningPoint ? 0 : 1;
+    bool isLower = preMaxHeight < INPUT[Input::TURNING_POINT];
 
-    return dispersion * INPUT.wDispersion[idx]
-        + static_cast<double>(numSpace * INPUT.wNumSpace[idx])
-        + static_cast<double>(maxHeight * INPUT.wMaxHeight[idx])
-        + static_cast<double>(difference * INPUT.wDifference[idx]);
+    return dispersion * INPUT[isLower ? Input::DISPERSION_LOW : Input::DISPERSION_HIGH]
+        + static_cast<double>(numSpace * INPUT[isLower ? Input::NUM_SPACE_LOW : Input::NUM_SPACE_HIGH])
+        + static_cast<double>(maxHeight * INPUT[isLower ? Input::MAX_HEIGHT_LOW : Input::MAX_HEIGHT_HIGH])
+        + static_cast<double>(difference * INPUT[isLower ? Input::DIFFERENCE_LOW : Input::DIFFERENCE_HIGH]);
 }
 
 std::size_t Evaluator::score() noexcept
 {
     std::size_t ret = 0;
 
-    ret = OUTPUT.numUsedBlock * USED_BLOCK_MULTIPLE
-        + OUTPUT.num1Line * ONE_LINE_SCORE_MULTIPLE
-        + OUTPUT.num2Lines * TWO_LINES_SCORE_MULTIPLE
-        + OUTPUT.num3Lines * THREE_LINES_SCORE_MULTIPLE
-        + OUTPUT.numTetris * TETRIS_SCORE_MULTIPLE;
+    ret = OUTPUT[Output::NUM_USED_BLOCK] * USED_BLOCK_MULTIPLE
+        + OUTPUT[Output::NUM_ONW_LINE] * ONE_LINE_SCORE_MULTIPLE
+        + OUTPUT[Output::NUM_TWO_LINES] * TWO_LINES_SCORE_MULTIPLE
+        + OUTPUT[Output::NUM_THREE_LINES] * THREE_LINES_SCORE_MULTIPLE
+        + OUTPUT[Output::NUM_TETRIS] * TETRIS_SCORE_MULTIPLE;
+
+    return ret;
+}
+
+std::size_t Evaluator::score(const Output &src) noexcept
+{
+    std::size_t ret = 0;
+
+    ret = src[Output::NUM_USED_BLOCK] * USED_BLOCK_MULTIPLE
+        + src[Output::NUM_ONW_LINE] * ONE_LINE_SCORE_MULTIPLE
+        + src[Output::NUM_TWO_LINES] * TWO_LINES_SCORE_MULTIPLE
+        + src[Output::NUM_THREE_LINES] * THREE_LINES_SCORE_MULTIPLE
+        + src[Output::NUM_TETRIS] * TETRIS_SCORE_MULTIPLE;
 
     return ret;
 }

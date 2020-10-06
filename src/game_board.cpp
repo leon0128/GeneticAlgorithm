@@ -1,3 +1,4 @@
+#include "ga/genetic_algorithm.hpp"
 #include "ga/evaluator.hpp"
 
 #include "game_board.hpp"
@@ -50,6 +51,9 @@ GameBoard::GameBoard(Game* game, int order):
 
     // mNPCThreadに無名関数の設定
     mNPCThread = std::thread([]{});
+
+    // ga
+    GA::GeneticAlgorithm::GA.setInputToEvaluator();
 }
 
 GameBoard::~GameBoard()
@@ -118,11 +122,12 @@ void GameBoard::gameover()
 
     // ga
     GA::Evaluator::OUTPUT
-        = GA::Output(std::stoi(mScores[3])
+        = GA::Output({std::stoi(mScores[3])
             , std::stoi(mScores[4])
             , std::stoi(mScores[5])
             , std::stoi(mScores[6])
-            , std::stoi(mScores[7]));
+            , std::stoi(mScores[7])});
+    GA::GeneticAlgorithm::GA.getOutputFromEvaluator();
 }
 
 void GameBoard::inputKeyboard()

@@ -67,7 +67,8 @@ void Pause::update()
 
     if((!mIsAllUpdatedBefore && !mIsAllUpdatedCurrent) &&
        (mGame->getKeyboardState().at(SDL_SCANCODE_J) == 1 ||
-        mGame->getKeyboardState().at(SDL_SCANCODE_SPACE) == 1))
+        mGame->getKeyboardState().at(SDL_SCANCODE_SPACE) == 1
+        || true )) //ga
     {
         if(mIsGameover)
             mSelectIndex++;
