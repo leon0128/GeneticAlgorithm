@@ -3,12 +3,12 @@
 namespace GA
 {
 
-const int Evaluator::MAX_NUM_USED_BLOCK = 500;
+const int Evaluator::MAX_NUM_USED_BLOCK = 1000;
 
 const int Evaluator::USED_BLOCK_MULTIPLE = 10;
-const int Evaluator::TETRIS_SCORE_MULTIPLE = 10;
-const int Evaluator::THREE_LINES_SCORE_MULTIPLE = 6;
-const int Evaluator::TWO_LINES_SCORE_MULTIPLE = 3;
+const int Evaluator::TETRIS_SCORE_MULTIPLE = 64;
+const int Evaluator::THREE_LINES_SCORE_MULTIPLE = 16;
+const int Evaluator::TWO_LINES_SCORE_MULTIPLE = 4;
 const int Evaluator::ONE_LINE_SCORE_MULTIPLE = 1;
 
 Input Evaluator::INPUT = Input();
@@ -18,14 +18,38 @@ double Evaluator::evaluate(int preMaxHeight
     , double dispersion
     , int numSpace
     , int maxHeight
-    , int difference) noexcept
+    , int difference
+    , int numDeletedLine) noexcept
 {
-    bool isLower = preMaxHeight < INPUT[Input::TURNING_POINT];
+    double ret = 0.0;
 
-    return dispersion * INPUT[isLower ? Input::DISPERSION_LOW : Input::DISPERSION_HIGH]
-        + static_cast<double>(numSpace * INPUT[isLower ? Input::NUM_SPACE_LOW : Input::NUM_SPACE_HIGH])
-        + static_cast<double>(maxHeight * INPUT[isLower ? Input::MAX_HEIGHT_LOW : Input::MAX_HEIGHT_HIGH])
-        + static_cast<double>(difference * INPUT[isLower ? Input::DIFFERENCE_LOW : Input::DIFFERENCE_HIGH]);
+    switch(numDeletedLine)
+    {
+        case(1):
+            ret += static_cast<double>(ONE_LINE_SCORE_MULTIPLE);
+            break;
+        case(2):
+            ret += static_cast<double>(TWO_LINES_SCORE_MULTIPLE);
+            break;
+        case(3):
+            ret += static_cast<double>(THREE_LINES_SCORE_MULTIPLE);
+            break;
+        case(4):
+            ret += static_cast<double>(TETRIS_SCORE_MULTIPLE);
+            break;
+        
+        default:;
+            ret = static_cast<double>(TETRIS_SCORE_MULTIPLE + ONE_LINE_SCORE_MULTIPLE) / 2.0;
+    }
+
+    ret = 1 / ret * static_cast<double>(INPUT[Input::NUM_DELETED_LINE]);
+
+    ret += dispersion * INPUT[Input::DISPERSION_LOW]
+        + static_cast<double>(numSpace * INPUT[Input::NUM_SPACE_LOW])
+        + static_cast<double>(maxHeight * INPUT[Input::MAX_HEIGHT_LOW])
+        + static_cast<double>(difference * INPUT[Input::DIFFERENCE_LOW]);
+
+    return ret;
 }
 
 std::size_t Evaluator::score() noexcept

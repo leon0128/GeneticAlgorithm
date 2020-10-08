@@ -1,4 +1,5 @@
 #include <limits>
+#include <algorithm>
 
 #include "ga/evaluator.hpp"
 #include "npc.hpp"
@@ -185,21 +186,26 @@ void NPC::calculateGA()
         {
             for(int c = 0; c < 10; c++)
             {
+                int preMaxHeight = getMaxHeight(mVirtualGameState);
+
                 VirtualGameState state 
                     = updateGameState(mVirtualGameState
                         , type
                         , d
                         , c);
-                int preMaxHeight = getMaxHeight(state);
+
+                int maxHeight = getMaxHeight(state);
+                int numDeleted = numDeletedLine(state);
 
                 state = deleteLine(state);
 
                 double tmp
-                    = GA::Evaluator::evaluate(preMaxHeight
+                    = GA::Evaluator::evaluate(maxHeight - preMaxHeight
                         , getDispersion(state)
                         , getEmptyNumber(state)
                         , getMaxHeight(state)
-                        , getHeightDifference(state));
+                        , getHeightDifference(state)
+                        , numDeleted);
 
                 if(tmp < evaluation)
                 {
@@ -489,6 +495,19 @@ NPC::VirtualGameState NPC::deleteLine(VirtualGameState gameState)
     }
 
     return gameState;
+}
+
+int NPC::numDeletedLine(const VirtualGameState &state)
+{
+    int ret = 0;
+
+    for(auto &&arr : state)
+    {
+        if(std::all_of(arr.begin(), arr.end(), [&](bool b){return b;}))
+            ret++;
+    }
+
+    return ret;
 }
 
 bool NPC::isFilledX(VirtualGameState gameState,

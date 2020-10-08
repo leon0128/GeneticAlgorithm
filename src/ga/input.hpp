@@ -11,15 +11,11 @@ class Input
 public:
     enum
     {
-        TURNING_POINT
-        , DISPERSION_LOW
-        , DISPERSION_HIGH
+        DISPERSION_LOW
         , NUM_SPACE_LOW
-        , NUM_SPACE_HIGH
         , MAX_HEIGHT_LOW
-        , MAX_HEIGHT_HIGH
         , DIFFERENCE_LOW
-        , DIFFERENCE_HIGH
+        , NUM_DELETED_LINE
         , ARRAY_SIZE
     };
 
@@ -29,6 +25,8 @@ public:
     constexpr Input(const std::array<int, ARRAY_SIZE> &inArr = std::array<int, ARRAY_SIZE>()) noexcept
         : array(inArr){}
     
+    void print() const;
+
     int &operator [](std::size_t idx)
         {return array[idx];}
     const int &operator [](std::size_t idx) const

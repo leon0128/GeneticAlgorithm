@@ -61,6 +61,9 @@ private:
     // ブロックで満たされている列の削除
     static VirtualGameState deleteLine(VirtualGameState gameState);
 
+    // ga
+    static int numDeletedLine(const VirtualGameState&);
+
     // 引数のx座標に被っていたらtrueを返す
     static bool isFilledX(VirtualGameState gameState,
                           int x,

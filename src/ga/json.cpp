@@ -94,6 +94,21 @@ void Json::add(std::size_t gen
     }
 
     mChild.push_back(std::make_pair("", node));
+
+    std::cout << "=== gen: " << gen
+        << ", idx: " << idx
+        << " ===\n"
+        "score: " << Evaluator::score(out)
+        << "\n"
+        "input: [";
+    for(auto &&i : in.array)
+        std::cout << i << ", ";
+    std::cout << "]\n"
+        "output: [";
+    for(auto &&i : out.array)
+        std::cout << i << ", ";
+    std::cout << "]\n\n"
+        << std::flush;
 }
 
 }

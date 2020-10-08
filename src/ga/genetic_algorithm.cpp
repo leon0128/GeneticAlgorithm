@@ -13,18 +13,18 @@ std::string OUTPUT_FILENAME;
 
 GeneticAlgorithm GeneticAlgorithm::GA;
 
-const double GeneticAlgorithm::CROSSOVER_RATE = 0.95;
-const double GeneticAlgorithm::MUTATION_RATE = 0.05;
-const std::size_t GeneticAlgorithm::NUM_ELEMENT = 10;
+const double GeneticAlgorithm::CROSSOVER_RATE = 0.6;
+const double GeneticAlgorithm::MUTATION_RATE = 0.1;
+const std::size_t GeneticAlgorithm::NUM_ELEMENT = 30;
 const std::size_t GeneticAlgorithm::NUM_GENERATION = 10;
 const bool GeneticAlgorithm::IS_SELECTED_ELITE = true;
 const std::vector<double> GeneticAlgorithm::RANKING_PROBABILITY
-    = {0.3 , 0.2, 0.15, 0.15, 0.1, 0.1};
-const std::size_t GeneticAlgorithm::TOURNAMENT_SIZE = 5;
-const std::size_t GeneticAlgorithm::NUM_ELITE = 1;
+    = {0.15 , 0.15, 0.15, 0.15, 0.1, 0.1, 0.1, 0.1};
+const std::size_t GeneticAlgorithm::TOURNAMENT_SIZE = 3;
+const std::size_t GeneticAlgorithm::NUM_ELITE = 2;
 const std::size_t GeneticAlgorithm::NUM_POINT = 3;
-const GeneticAlgorithm::CrossingTag GeneticAlgorithm::CROSSING_TAG = GeneticAlgorithm::CrossingTag::ONE_POINT_CROSSING;
-const GeneticAlgorithm::SelectionTag GeneticAlgorithm::SELECTION_TAG = GeneticAlgorithm::SelectionTag::RANKING_SELECTION;
+const GeneticAlgorithm::CrossingTag GeneticAlgorithm::CROSSING_TAG = GeneticAlgorithm::CrossingTag::UNIFORM_CROSSING;
+const GeneticAlgorithm::SelectionTag GeneticAlgorithm::SELECTION_TAG = GeneticAlgorithm::SelectionTag::TOURNAMENT_SELECTION;
 
 GeneticAlgorithm::GeneticAlgorithm()
     : mIOVec()
@@ -52,7 +52,7 @@ void GeneticAlgorithm::evolve()
 
     if(IS_SELECTED_ELITE)
     {
-        std::map<std::size_t, Input> map;
+        std::multimap<std::size_t, Input> map;
         for(std::size_t i = 0; i < mIOVec.size(); i++)
             map.emplace(Evaluator::score(mIOVec[i].second), mIOVec[i].first);
         
@@ -67,9 +67,9 @@ void GeneticAlgorithm::evolve()
     {
         double rand = Random::random();
         double prob = 0.0;
-        if((prob += CROSSOVER_RATE) <= rand)
+        if((prob += CROSSOVER_RATE) > rand)
             nextIO.emplace_back(generateCrossing(select(), select()), Output());
-        else if((prob += MUTATION_RATE) <= rand)
+        else if((prob += MUTATION_RATE) > rand)
             nextIO.emplace_back(generateMutation(select()), Output());
         else
             nextIO.emplace_back(select(), Output());
@@ -88,6 +88,7 @@ void GeneticAlgorithm::setInputToEvaluator()
     }
 
     Evaluator::INPUT = mIOVec[mIdx].first;
+    // Evaluator::INPUT = Input({15, 70, 15, 15, 99});
 }
 
 void GeneticAlgorithm::getOutputFromEvaluator()
@@ -99,7 +100,7 @@ void GeneticAlgorithm::getOutputFromEvaluator()
 
 Input GeneticAlgorithm::select() const
 {
-    Input ret = mIOVec.front().first;
+    Input ret;
 
     switch(SELECTION_TAG)
     {
@@ -117,7 +118,7 @@ Input GeneticAlgorithm::select() const
             double rand = Random::random();
             for(std::size_t i = 0; i < mIOVec.size(); i++)
             {
-                if((prob += static_cast<double>(scores[i]) / static_cast<double>(sumScore)) <= rand)
+                if((prob += static_cast<double>(scores[i]) / static_cast<double>(sumScore)) > rand)
                 {
                     ret = mIOVec[i].first;
                     break;
@@ -131,7 +132,7 @@ Input GeneticAlgorithm::select() const
         }
         case(SelectionTag::RANKING_SELECTION):
         {
-            std::map<std::size_t, const Input&> map;
+            std::multimap<std::size_t, const Input&> map;
             for(auto &&p : mIOVec)
                 map.emplace(Evaluator::score(p.second), p.first);
             
@@ -142,7 +143,7 @@ Input GeneticAlgorithm::select() const
                 iter != map.rend() && idx < RANKING_PROBABILITY.size();
                 iter++, idx++)
             {
-                if((sumProb += RANKING_PROBABILITY[idx]) >= prob)
+                if((sumProb += RANKING_PROBABILITY[idx]) > prob)
                 {
                     ret = iter->second;
                     break;
@@ -174,20 +175,26 @@ Input GeneticAlgorithm::select() const
         }
     }
 
+    std::cout << "select:\n"
+        "    ";
+    ret.print();
+
     return ret;
 }
 
 Input GeneticAlgorithm::generateRandom() const
 {
-    return Input({static_cast<int>(Random::random() * Input::MAX_VALUE[Input::TURNING_POINT])
-        , static_cast<int>(Random::random() * Input::MAX_VALUE[Input::DISPERSION_LOW])
-        , static_cast<int>(Random::random() * Input::MAX_VALUE[Input::DISPERSION_HIGH])
+    Input ret = Input({static_cast<int>(Random::random() * Input::MAX_VALUE[Input::DISPERSION_LOW])
         , static_cast<int>(Random::random() * Input::MAX_VALUE[Input::NUM_SPACE_LOW])
-        , static_cast<int>(Random::random() * Input::MAX_VALUE[Input::NUM_SPACE_HIGH])
         , static_cast<int>(Random::random() * Input::MAX_VALUE[Input::MAX_HEIGHT_LOW])
-        , static_cast<int>(Random::random() * Input::MAX_VALUE[Input::MAX_HEIGHT_HIGH])
         , static_cast<int>(Random::random() * Input::MAX_VALUE[Input::DIFFERENCE_LOW])
-        , static_cast<int>(Random::random() * Input::MAX_VALUE[Input::DIFFERENCE_HIGH])});
+        , static_cast<int>(Random::random() * Input::MAX_VALUE[Input::NUM_DELETED_LINE])});
+
+    std::cout << "gen-random:\n"
+        "    ";
+    ret.print();
+
+    return ret;
 }
 
 Input GeneticAlgorithm::generateCrossing(const Input &lhs, const Input &rhs) const
@@ -280,12 +287,26 @@ Input GeneticAlgorithm::generateCrossing(const Input &lhs, const Input &rhs) con
         }
     }
 
+    std::cout << "gen-crossing:\n"
+        "    ";
+    lhs.print();
+    std::cout << "    ";
+    rhs.print();
+    std::cout << "    ";
+    ret.print();
+
     return ret;
 }
 
 Input GeneticAlgorithm::generateMutation(const Input &src) const
 {
-    return generateRandom();
+    Input ret = generateRandom();
+    
+    std::cout << "gen-mutation:\n"
+        "    ";
+    ret.print();
+
+    return ret;
 }
 
 }

@@ -1,6 +1,8 @@
 #ifndef GA_EVALUATOR_HPP
 #define GA_EVALUATOR_HPP
 
+#include <vector>
+
 #include "input.hpp"
 #include "output.hpp"
 
@@ -27,7 +29,8 @@ public:
         , double dispersion
         , int numSpace
         , int maxHeight
-        , int difference) noexcept;
+        , int difference
+        , int numDeletedLine) noexcept;
     
     static std::size_t score() noexcept;
     static std::size_t score(const Output&) noexcept;
