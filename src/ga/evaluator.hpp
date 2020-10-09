@@ -13,6 +13,7 @@ class Evaluator
 {
 public:
     static const int MAX_NUM_USED_BLOCK;
+    static const int NPC_DEPTH;
     
     static const int USED_BLOCK_MULTIPLE;
     static const int TETRIS_SCORE_MULTIPLE;
@@ -25,12 +26,11 @@ public:
 
     Evaluator() = delete;
 
-    static double evaluate(int preMaxHeight
-        , double dispersion
+    static double evaluate(double dispersion
         , int numSpace
         , int maxHeight
         , int difference
-        , int numDeletedLine) noexcept;
+        , const std::vector<int> &numDeletedLineVec) noexcept;
     
     static std::size_t score() noexcept;
     static std::size_t score(const Output&) noexcept;

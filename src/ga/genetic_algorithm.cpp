@@ -87,8 +87,8 @@ void GeneticAlgorithm::setInputToEvaluator()
         evolve();
     }
 
-    Evaluator::INPUT = mIOVec[mIdx].first;
-    // Evaluator::INPUT = Input({15, 70, 15, 15, 99});
+    // Evaluator::INPUT = mIOVec[mIdx].first;
+    Evaluator::INPUT = Input({5, 100, 1, 0, 50});
 }
 
 void GeneticAlgorithm::getOutputFromEvaluator()

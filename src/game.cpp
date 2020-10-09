@@ -165,7 +165,6 @@ void Game::inputProcess()
 void Game::updateGame()
 {
     // 60fps
-    // ga
     while(!SDL_TICKS_PASSED(SDL_GetTicks(), mTicksCount + 16)){}
     // mTicksCountとmFrameCountを更新
     mTicksCount = SDL_GetTicks();

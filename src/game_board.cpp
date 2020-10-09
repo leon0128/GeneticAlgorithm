@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "ga/genetic_algorithm.hpp"
 #include "ga/evaluator.hpp"
 
@@ -16,7 +18,9 @@ GameBoard::GameBoard(Game* game, int order):
     mHoldBoard(nullptr),
     mIsHolded(false),
     mScoreBoard(nullptr),
-    mIsInitializeResult(false)
+    mNPCResult({0u, 0, false}),
+    mIsInitializeResult(false),
+    mNPCThread([]{})
 {
     // 自身の位置とテクスチャの設定
     mPosition.set(WINDOW_WIDTH * 3 / 10, WINDOW_HEIGHT / 2);
@@ -50,7 +54,6 @@ GameBoard::GameBoard(Game* game, int order):
     initializeScoreBoard();
 
     // mNPCThreadに無名関数の設定
-    mNPCThread = std::thread([]{});
 
     // ga
     GA::GeneticAlgorithm::GA.setInputToEvaluator();
@@ -175,22 +178,34 @@ void GameBoard::inputNPC()
         return;
     }
     // 並行移動処理
-    if(mActiveTetrominio->getMoveFrame() >= mUpdateFrame - 1)
+    static bool isLastPassFollowing = false;
+    static int lastCoordinate = 0;
+    if(mNPCResult.coordinate < mActiveTetrominio->getCenter().x)
     {
-        if(mNPCResult.coordinate < mActiveTetrominio->getCenter().x)
+        if(!isLastPassFollowing
+            || lastCoordinate != mActiveTetrominio->getCenter().x)
         {
             mKeyboardState[SDL_SCANCODE_A] = 1;
-            return;
+            isLastPassFollowing = true;
+            lastCoordinate = mActiveTetrominio->getCenter().x;
+            return;            
         }
-        else if(mNPCResult.coordinate > mActiveTetrominio->getCenter().x)
+    }
+    else if(mNPCResult.coordinate > mActiveTetrominio->getCenter().x)
+    {
+        if(!isLastPassFollowing
+            || lastCoordinate != mActiveTetrominio->getCenter().x)
         {
             mKeyboardState[SDL_SCANCODE_D] = 1;
+            isLastPassFollowing = true;
+            lastCoordinate = mActiveTetrominio->getCenter().x;
             return;
         }
     }
 
     // クイックドロップ
     mKeyboardState[SDL_SCANCODE_W] = 1;
+    isLastPassFollowing = false;
     mIsInitializeResult = false;
 }
 
@@ -243,24 +258,13 @@ void GameBoard::pickTetromino()
             next.push_back(board->getType());
         }
 
-        mNPCThread.detach();
+        mNPCThread.join();
+        NPC::standCalculationFlag();
         mNPCThread = std::thread(NPC::startCalculation,
                                  mActiveTetrominio->getType(),
                                  mHoldBoard->getType(),
                                  next,
                                  mGameState);
-
-        // NPC::isCalculationがtrueになるまで待つ
-        auto timeout = SDL_GetTicks() + 100;
-        while(!NPC::isCalculating())
-        {
-            // 無限ループ回避
-            if(SDL_TICKS_PASSED(SDL_GetTicks(), timeout))
-            {
-                SDL_Log("Loop exited because an infinite loop may have occurred: %s", __func__);
-                break;
-            }
-        }
     }
 }
 

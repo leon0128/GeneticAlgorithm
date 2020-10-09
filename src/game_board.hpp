@@ -86,7 +86,7 @@ private:
 
     // NPC関連
     // NPCの計算結果を格納
-    struct NPC::Result mNPCResult;
+    NPC::Result mNPCResult;
     // 結果を初期化したか
     bool mIsInitializeResult;
     // NPCの演算を処理するスレッド

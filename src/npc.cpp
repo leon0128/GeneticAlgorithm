@@ -1,5 +1,9 @@
+#include <iostream>
+#include <deque>
 #include <limits>
+#include <utility>
 #include <algorithm>
+#include <thread>
 
 #include "ga/evaluator.hpp"
 #include "npc.hpp"
@@ -14,18 +18,42 @@ struct NPC::Result NPC::mResult;
 std::vector<struct NPC::DetailResult> NPC::mDetailResultVector;
 int NPC::mDenger = 0;
 
+// ga
+std::mutex NPC::mMutex;
+std::mutex NPC::mTemporaryMutex;
+std::mutex NPC::mScoreResultsMutex;
+double mScoreResults;
+NPC::Result NPC::mTemporaryResult = {0u, 0, false};
+
+bool NPC::isCalculating()
+{
+    std::lock_guard<std::mutex> lock(mMutex);
+    return mIsCalculating;
+}
+
+const NPC::Result &NPC::getResult()
+{
+    std::lock_guard<std::mutex> lock(mMutex);
+    return mResult;
+}
+
+void NPC::standCalculationFlag()
+{
+    std::lock_guard<std::mutex> lock(mMutex);
+    mIsCalculating = true;
+}
+
 void NPC::startCalculation(EType active, 
                           EType hold, 
-                          std::vector<EType> next,
-                          std::vector<std::array<Block*, GAMEBOARD_PARALLEL>> gameState)
+                          const std::vector<EType> &next,
+                          const std::vector<std::array<Block*, GAMEBOARD_PARALLEL>> &gameState)
 {
-    // 計算開始フラグ
-    mIsCalculating = true;
-
     // 結果の初期化
-    mResult.isHoled = 1;
-    mResult.direction = 2;
-    mResult.coordinate = 6;
+    mMutex.lock();
+    mResult.isHoled = 0;
+    mResult.direction = 0;
+    mResult.coordinate = 0;
+    mMutex.unlock();
 
     // 各メンバ変数の設定
     mActiveTetromino = active;
@@ -33,21 +61,29 @@ void NPC::startCalculation(EType active,
     mNextTetromino = next;
 
     // mVirtualGameStateの設定
-    for(int y = 0; y < (int)gameState.size(); y++)
+    // for(int y = 0; y < (int)gameState.size(); y++)
+    // {
+    //     std::array<bool, GAMEBOARD_PARALLEL> line;
+    //     mVirtualGameState.push_back(line);
+    //     for(int x = 0; x < (int)gameState[y].size(); x++)
+    //     {
+    //         if(gameState[y][x])
+    //         {
+    //             mVirtualGameState[y][x] = true;
+    //         }
+    //         else
+    //         {
+    //             mVirtualGameState[y][x] = false;
+    //         }
+    //     }
+    // }
+
+    // ga
+    for(auto &&arr : gameState)
     {
-        std::array<bool, GAMEBOARD_PARALLEL> line;
-        mVirtualGameState.push_back(line);
-        for(int x = 0; x < (int)gameState[y].size(); x++)
-        {
-            if(gameState[y][x])
-            {
-                mVirtualGameState[y][x] = true;
-            }
-            else
-            {
-                mVirtualGameState[y][x] = false;
-            }
-        }
+        mVirtualGameState.emplace_back();
+        for(std::size_t i = 0; i < arr.size(); i++)
+            mVirtualGameState.back()[i] = arr[i] != nullptr;
     }
 
     // 計算結果をmResultに格納
@@ -57,164 +93,240 @@ void NPC::startCalculation(EType active,
     mDetailResultVector.clear();
 
     // 計算終了フラグ
+    mTemporaryMutex.lock();
+    mMutex.lock();
+    mResult = mTemporaryResult;
     mIsCalculating = false;
+    mMutex.unlock();
+    mTemporaryMutex.unlock();
 }
 
 void NPC::calculate()
 {
-    VirtualGameState gameState;
+    // VirtualGameState gameState;
 
-    // ホールドと通常の合わせて80回
-    for(int h = 0; h < 2; h++)
-    {
-        EType type = mActiveTetromino;
-        if(h == 1)
-        {
-            if(mHoldTetromino == NONE)
-            {
-                type = mNextTetromino[0];
-            }
-            else
-            {
-                type = mHoldTetromino;
-            }
-        }
+    // // ホールドと通常の合わせて80回
+    // for(int h = 0; h < 2; h++)
+    // {
+    //     EType type = mActiveTetromino;
+    //     if(h == 1)
+    //     {
+    //         if(mHoldTetromino == NONE)
+    //         {
+    //             type = mNextTetromino[0];
+    //         }
+    //         else
+    //         {
+    //             type = mHoldTetromino;
+    //         }
+    //     }
 
-        for(unsigned int d = 0; d < 4; d++)
-        {
-            for(int c = 0; c < 10; c++)
-            {
-                // gameStateの作成
-                gameState = updateGameState(mVirtualGameState,
-                                            type,
-                                            d,
-                                            c);
+    //     for(unsigned int d = 0; d < 4; d++)
+    //     {
+    //         for(int c = 0; c < 10; c++)
+    //         {
+    //             // gameStateの作成
+    //             gameState = updateGameState(mVirtualGameState,
+    //                                         type,
+    //                                         d,
+    //                                         c);
 
-                gameState = deleteLine(gameState);
-                Result result = {d, c, h ? true : false};
-                DetailResult detail = {result,
-                                    getEmptyNumber(gameState),
-                                    getMaxHeight(gameState),
-                                    getDispersion(gameState),
-                                    getHeightDifference(gameState)};
-                mDetailResultVector.push_back(detail);
-                gameState.clear(); 
-            }
-        }
-    }
+    //             gameState = deleteLine(gameState);
+    //             Result result = {d, c, h ? true : false};
+    //             DetailResult detail = {result,
+    //                                 getEmptyNumber(gameState),
+    //                                 getMaxHeight(gameState),
+    //                                 getDispersion(gameState),
+    //                                 getHeightDifference(gameState)};
+    //             mDetailResultVector.push_back(detail);
+    //             gameState.clear(); 
+    //         }
+    //     }
+    // }
 
-    if(getMaxHeight(mVirtualGameState) > 6 &&
-       getMaxHeight(mVirtualGameState) <= 8 && 
-       mDenger == 0)
-    {
-        SDL_Log("=CAUTION=");
+    // if(getMaxHeight(mVirtualGameState) > 6 &&
+    //    getMaxHeight(mVirtualGameState) <= 8 && 
+    //    mDenger == 0)
+    // {
+    //     SDL_Log("=CAUTION=");
         
-        deleteNonMinimumHeightDifference();
-        deleteNonMinimumEmpty();
-        deleteNonMinimumDispersion();
-        mDenger += 2; 
-    }
-    else if(getMaxHeight(mVirtualGameState) > 8 &&
-            getMaxHeight(mVirtualGameState) <= 10 &&
-            mDenger == 0)
-    {
-        SDL_Log("==WARNING==");
-        deleteNonMinimumHeightDifference();
-        deleteNonMinimumEmpty();
-        deleteNonMinimumDispersion();
-        mDenger += 4;         
-    }
-    else if(getMaxHeight(mVirtualGameState) > 10 &&
-            getMaxHeight(mVirtualGameState) <= 14 &&
-            mDenger == 0)
-    {
-        SDL_Log("===DENGER===");
-        deleteNonMinimumHeightDifference();
-        deleteNonMinimumEmpty();
-        deleteNonMinimumDispersion();
-        mDenger += 6;         
-    }
-    else if(getMaxHeight(mVirtualGameState) > 14 &&
-            mDenger == 0)
-    {
-        SDL_Log("====DESPERATION====");
-        deleteNonMinimumEmpty();
-        deleteNonMinimumHeightDifference();
-        deleteNonMinimumDispersion();
-        mDenger += 2;
-    }
-    else
-    {
-        deleteNonMinimumEmpty();
-        deleteNonMinimumHeightDifference();
-        deleteNonMinimumDispersion();
-        if(mDenger > 0)
-        {
-            mDenger--;
-        }
-    }
+    //     deleteNonMinimumHeightDifference();
+    //     deleteNonMinimumEmpty();
+    //     deleteNonMinimumDispersion();
+    //     mDenger += 2; 
+    // }
+    // else if(getMaxHeight(mVirtualGameState) > 8 &&
+    //         getMaxHeight(mVirtualGameState) <= 10 &&
+    //         mDenger == 0)
+    // {
+    //     SDL_Log("==WARNING==");
+    //     deleteNonMinimumHeightDifference();
+    //     deleteNonMinimumEmpty();
+    //     deleteNonMinimumDispersion();
+    //     mDenger += 4;         
+    // }
+    // else if(getMaxHeight(mVirtualGameState) > 10 &&
+    //         getMaxHeight(mVirtualGameState) <= 14 &&
+    //         mDenger == 0)
+    // {
+    //     SDL_Log("===DENGER===");
+    //     deleteNonMinimumHeightDifference();
+    //     deleteNonMinimumEmpty();
+    //     deleteNonMinimumDispersion();
+    //     mDenger += 6;         
+    // }
+    // else if(getMaxHeight(mVirtualGameState) > 14 &&
+    //         mDenger == 0)
+    // {
+    //     SDL_Log("====DESPERATION====");
+    //     deleteNonMinimumEmpty();
+    //     deleteNonMinimumHeightDifference();
+    //     deleteNonMinimumDispersion();
+    //     mDenger += 2;
+    // }
+    // else
+    // {
+    //     deleteNonMinimumEmpty();
+    //     deleteNonMinimumHeightDifference();
+    //     deleteNonMinimumDispersion();
+    //     if(mDenger > 0)
+    //     {
+    //         mDenger--;
+    //     }
+    // }
 
-    // 結果
-    if(!mDetailResultVector.empty())
-    {
-        DetailResult detailResult = mDetailResultVector.at(rand() % mDetailResultVector.size());
-        mResult = detailResult.result;
-        // SDL_Log("emp: %d, dis: %lf, mHD: %d, mHe: %d", detailResult.empty, sqrt(detailResult.dispersion), detailResult.maxHeightDifference, detailResult.maxHeight);
-    }
-    else
-    {
-        SDL_Log("NPC calculation result does not exist: %s", __func__);
-    }
+    // // 結果
+    // if(!mDetailResultVector.empty())
+    // {
+    //     DetailResult detailResult = mDetailResultVector.at(rand() % mDetailResultVector.size());
+    //     mResult = detailResult.result;
+    //     // SDL_Log("emp: %d, dis: %lf, mHD: %d, mHe: %d", detailResult.empty, sqrt(detailResult.dispersion), detailResult.maxHeightDifference, detailResult.maxHeight);
+    // }
+    // else
+    // {
+    //     SDL_Log("NPC calculation result does not exist: %s", __func__);
+    // }
 }
 
 void NPC::calculateGA()
 {
-    double evaluation = std::numeric_limits<double>::max();
+    EType activeType = mActiveTetromino;
+    EType holdType = mHoldTetromino;
+    std::deque<EType> nextTypes(mNextTetromino.begin(), mNextTetromino.end());
+    std::vector<int> deletedLines;
+
+    if(0 < GA::Evaluator::NPC_DEPTH)
+        supportCalculation(mVirtualGameState
+            , activeType
+            , holdType
+            , nextTypes
+            , deletedLines
+            , 1);
+}
+
+double NPC::supportCalculation(const VirtualGameState &preState
+    , EType activeType
+    , EType holdType
+    , const std::deque<EType> &inNextTypes
+    , const std::vector<int> &inDeletedLines
+    , int depth)
+{
+    std::deque<EType> nextTypes(inNextTypes);
+    std::vector<int> deletedLines(inDeletedLines);
+
+    double ret = std::numeric_limits<double>::max();
 
     for(int h = 0; h < 2; h++)
     {
-        EType type = mActiveTetromino;
         if(h == 1)
         {
-            if(mHoldTetromino == NONE)
-                type = mNextTetromino[0];
+            if(holdType != NONE)
+                std::swap(activeType, holdType);
+            else if(!nextTypes.empty())
+            {
+                holdType = activeType;
+                activeType = nextTypes.front();
+                nextTypes.pop_front();
+            }
             else
-                type = mHoldTetromino;
+                break;
+            
+            if(activeType == holdType)
+                break;
         }
 
-        for(unsigned int d = 0; d < 4; d++)
+        unsigned int dSize = 0u;
+        switch(activeType)
         {
-            for(int c = 0; c < 10; c++)
+            case(EType::O):
+                dSize = 1u;
+            case(EType::I):
+            case(EType::S):
+            case(EType::Z):
+                dSize = 2u;
+            case(EType::J):
+            case(EType::L):
+            case(EType::T):
+                dSize = 4u;
+            
+            default:;
+        }
+        for(unsigned int d = 0u; d < dSize; d++)
+        {
+
+            for(int c = 0; c < GAMEBOARD_PARALLEL; c++)
             {
-                int preMaxHeight = getMaxHeight(mVirtualGameState);
+                VirtualGameState state = preState; 
+                updateGameState(state
+                    , activeType
+                    , d
+                    , c);
 
-                VirtualGameState state 
-                    = updateGameState(mVirtualGameState
-                        , type
-                        , d
-                        , c);
+                deletedLines.push_back(numDeletedLine(state));
+                
+                deleteLine(state);
 
-                int maxHeight = getMaxHeight(state);
-                int numDeleted = numDeletedLine(state);
-
-                state = deleteLine(state);
-
-                double tmp
-                    = GA::Evaluator::evaluate(maxHeight - preMaxHeight
-                        , getDispersion(state)
+                double score = std::numeric_limits<double>::max();
+                if(depth == GA::Evaluator::NPC_DEPTH
+                    || nextTypes.empty())
+                {
+                    score = GA::Evaluator::evaluate(getDispersion(state)
                         , getEmptyNumber(state)
                         , getMaxHeight(state)
                         , getHeightDifference(state)
-                        , numDeleted);
-
-                if(tmp < evaluation)
+                        , deletedLines);
+                }
+                else
                 {
-                    mResult = {d, c, h ? true : false};
-                    evaluation = tmp;
+                    EType tmp = nextTypes.front();
+                    nextTypes.pop_front();
+                    
+                    score = supportCalculation(state
+                        , tmp
+                        , holdType
+                        , nextTypes
+                        , deletedLines
+                        , depth + 1);
+                    nextTypes.push_front(tmp);
+                }
+                
+                deletedLines.pop_back();
+
+                if(score < ret)
+                {
+                    ret = score;
+                    if(depth == 1)
+                    {
+                        mTemporaryMutex.lock();
+                        mTemporaryResult = {d, c, h != 0 ? true : false};
+                        mTemporaryMutex.unlock();
+                    }
                 }
             }
         }
     }
+
+    return ret;
 }
 
 int NPC::getMinHeight(VirtualGameState gameState)
@@ -288,81 +400,79 @@ int NPC::getMinHeight(VirtualGameState gameState, int exclusionX)
     return minHeight;
 }
 
-NPC::VirtualGameState NPC::updateGameState(VirtualGameState gameState,
+void NPC::updateGameState(VirtualGameState &gameState,
                          EType type,
                          int direction,
                          int coordinate)
 {
-    auto tetromino = getInitializeTetrominoCoordinate(type);
-    tetromino = getRotationTetrominoCoordinate(tetromino, direction);
-    tetromino = getParallelTetrominoCoordinate(tetromino, coordinate);
-    VirtualGameState gs = getQuickDropedGameState(gameState, tetromino);
-    return gs;
+    std::array<Vector2, 4> tetromino;
+    getInitializeTetrominoCoordinate(type, tetromino);
+    getRotationTetrominoCoordinate(tetromino, direction);
+    getParallelTetrominoCoordinate(tetromino, coordinate);
+    getQuickDropedGameState(gameState, tetromino);
 }
 
-std::array<Vector2, 4> NPC::getInitializeTetrominoCoordinate(EType type)
+void NPC::getInitializeTetrominoCoordinate(EType type
+    , std::array<Vector2, 4> &dst)
 {
-    std::array<Vector2, 4> tetromino;
-
     switch(type)
     {
         case(I):
-            tetromino[0].set(4, 19);
-            tetromino[1].set(5, 19);
-            tetromino[2].set(3, 19);
-            tetromino[3].set(6, 19);
+            dst[0].set(4, 19);
+            dst[1].set(5, 19);
+            dst[2].set(3, 19);
+            dst[3].set(6, 19);
             break;
         
         case(O):
-            tetromino[0].set(4, 19);
-            tetromino[1].set(4, 18);
-            tetromino[2].set(5, 18);
-            tetromino[3].set(5, 19);
+            dst[0].set(4, 19);
+            dst[1].set(4, 18);
+            dst[2].set(5, 18);
+            dst[3].set(5, 19);
             break;
 
         case(T):
-            tetromino[0].set(4, 18);
-            tetromino[1].set(4, 19);
-            tetromino[2].set(3, 18);
-            tetromino[3].set(5, 18);
+            dst[0].set(4, 18);
+            dst[1].set(4, 19);
+            dst[2].set(3, 18);
+            dst[3].set(5, 18);
             break;
 
         case(L):
-            tetromino[0].set(4, 18);
-            tetromino[1].set(5, 18);
-            tetromino[2].set(3, 18);
-            tetromino[3].set(5, 19);
+            dst[0].set(4, 18);
+            dst[1].set(5, 18);
+            dst[2].set(3, 18);
+            dst[3].set(5, 19);
             break;
 
         case(J):
-            tetromino[0].set(4, 18);
-            tetromino[1].set(3, 18);
-            tetromino[2].set(5, 18);
-            tetromino[3].set(3, 19);
+            dst[0].set(4, 18);
+            dst[1].set(3, 18);
+            dst[2].set(5, 18);
+            dst[3].set(3, 19);
             break;
 
         case(S):
-            tetromino[0].set(4, 18);
-            tetromino[1].set(4, 19);
-            tetromino[2].set(3, 18);
-            tetromino[3].set(5, 19);
+            dst[0].set(4, 18);
+            dst[1].set(4, 19);
+            dst[2].set(3, 18);
+            dst[3].set(5, 19);
             break;
 
         case(Z):
-            tetromino[0].set(4, 18);
-            tetromino[1].set(4, 19);
-            tetromino[2].set(5, 18);
-            tetromino[3].set(3, 19);
+            dst[0].set(4, 18);
+            dst[1].set(4, 19);
+            dst[2].set(5, 18);
+            dst[3].set(3, 19);
             break;
         
         default:
             SDL_Log("Cannot create tetromino: %s", __func__);
             break;
     }
-    return tetromino;
 }
 
-std::array<Vector2, 4> NPC::getRotationTetrominoCoordinate(std::array<Vector2, 4> tetromino,
+void NPC::getRotationTetrominoCoordinate(std::array<Vector2, 4> &tetromino,
                                                           int direction)
 {
     Vector2 target, distance;
@@ -379,10 +489,9 @@ std::array<Vector2, 4> NPC::getRotationTetrominoCoordinate(std::array<Vector2, 4
             tetromino[j] = target;
         }
     }
-    return tetromino;
 }
 
-std::array<Vector2, 4> NPC::getParallelTetrominoCoordinate(std::array<Vector2, 4> tetromino,
+void NPC::getParallelTetrominoCoordinate(std::array<Vector2, 4> &tetromino,
                                                       int coordinateX)
 {
     bool isCorrect = true;
@@ -427,12 +536,10 @@ std::array<Vector2, 4> NPC::getParallelTetrominoCoordinate(std::array<Vector2, 4
             }
         }
     }
-
-    return tetromino;
 }
 
-NPC::VirtualGameState NPC::getQuickDropedGameState(VirtualGameState gameState,
-                                 std::array<Vector2, 4> tetromino)
+void NPC::getQuickDropedGameState(VirtualGameState &gameState,
+                                  std::array<Vector2, 4> &tetromino)
 {
     bool isCorrect = true;
     while(isCorrect)
@@ -460,11 +567,9 @@ NPC::VirtualGameState NPC::getQuickDropedGameState(VirtualGameState gameState,
     {
         gameState[tetromino[i].y][tetromino[i].x] = true;
     }
-    
-    return gameState;
 }
 
-NPC::VirtualGameState NPC::deleteLine(VirtualGameState gameState)
+void NPC::deleteLine(VirtualGameState &gameState)
 {
     std::vector<int> filledLine;
     for(int y = 0; y < GAMEBOARD_VERTICAL; y++)
@@ -493,8 +598,6 @@ NPC::VirtualGameState NPC::deleteLine(VirtualGameState gameState)
         }
         filledLine.erase(filledLine.begin());
     }
-
-    return gameState;
 }
 
 int NPC::numDeletedLine(const VirtualGameState &state)
@@ -524,7 +627,7 @@ bool NPC::isFilledX(VirtualGameState gameState,
     return false;
 }
 
-int NPC::getMaxHeight(VirtualGameState gameState)
+int NPC::getMaxHeight(const VirtualGameState &gameState)
 {
     bool isEmpty = false;
     int height = 0;
@@ -548,7 +651,7 @@ int NPC::getMaxHeight(VirtualGameState gameState)
     return height;
 }
 
-int NPC::getEmptyNumber(VirtualGameState gameState)
+int NPC::getEmptyNumber(const VirtualGameState &gameState)
 {   
     // 各x軸で一番高い位置にあるブロックのy座標を格納
     // ブロックが存在しない場合は、-1となる
@@ -585,7 +688,7 @@ int NPC::getEmptyNumber(VirtualGameState gameState)
     return emptyNumber;
 }
 
-double NPC::getDispersion(VirtualGameState gameState)
+double NPC::getDispersion(const VirtualGameState &gameState)
 {
     // 各x軸で一番高い位置にあるブロックのy座標を格納
     // ブロックが存在しない場合は、-1となる
@@ -633,7 +736,7 @@ double NPC::getDispersion(VirtualGameState gameState)
     return dispersion;
 }
 
-int NPC::getHeightDifference(VirtualGameState gameState)
+int NPC::getHeightDifference(const VirtualGameState &gameState)
 {
     // 各x軸で一番高い位置にあるブロックのy座標を格納
     // ブロックが存在しない場合は、0となる

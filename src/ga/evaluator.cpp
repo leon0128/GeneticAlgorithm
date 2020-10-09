@@ -4,45 +4,49 @@ namespace GA
 {
 
 const int Evaluator::MAX_NUM_USED_BLOCK = 1000;
+const int Evaluator::NPC_DEPTH = 3;
 
 const int Evaluator::USED_BLOCK_MULTIPLE = 10;
 const int Evaluator::TETRIS_SCORE_MULTIPLE = 64;
-const int Evaluator::THREE_LINES_SCORE_MULTIPLE = 16;
+const int Evaluator::THREE_LINES_SCORE_MULTIPLE = 8;
 const int Evaluator::TWO_LINES_SCORE_MULTIPLE = 4;
 const int Evaluator::ONE_LINE_SCORE_MULTIPLE = 1;
 
 Input Evaluator::INPUT = Input();
 Output Evaluator::OUTPUT = Output();
 
-double Evaluator::evaluate(int preMaxHeight
-    , double dispersion
+double Evaluator::evaluate(double dispersion
     , int numSpace
     , int maxHeight
     , int difference
-    , int numDeletedLine) noexcept
+    , const std::vector<int> &numDeletedLineVec) noexcept
 {
     double ret = 0.0;
 
-    switch(numDeletedLine)
+    for(auto &&i : numDeletedLineVec)
     {
-        case(1):
-            ret += static_cast<double>(ONE_LINE_SCORE_MULTIPLE);
-            break;
-        case(2):
-            ret += static_cast<double>(TWO_LINES_SCORE_MULTIPLE);
-            break;
-        case(3):
-            ret += static_cast<double>(THREE_LINES_SCORE_MULTIPLE);
-            break;
-        case(4):
-            ret += static_cast<double>(TETRIS_SCORE_MULTIPLE);
-            break;
-        
-        default:;
-            ret = static_cast<double>(TETRIS_SCORE_MULTIPLE + ONE_LINE_SCORE_MULTIPLE) / 2.0;
-    }
+        double tmp = 0.0;
+        switch(i)
+        {
+            case(1):
+                tmp += static_cast<double>(ONE_LINE_SCORE_MULTIPLE);
+                break;
+            case(2):
+                tmp += static_cast<double>(TWO_LINES_SCORE_MULTIPLE);
+                break;
+            case(3):
+                tmp += static_cast<double>(THREE_LINES_SCORE_MULTIPLE);
+                break;
+            case(4):
+                tmp += static_cast<double>(TETRIS_SCORE_MULTIPLE);
+                break;
+            
+            default:;
+                tmp += static_cast<double>(TETRIS_SCORE_MULTIPLE + ONE_LINE_SCORE_MULTIPLE) / 2.0;
+        }
 
-    ret = 1 / ret * static_cast<double>(INPUT[Input::NUM_DELETED_LINE]);
+        ret += 1.0 / tmp * static_cast<double>(INPUT[Input::NUM_DELETED_LINE]);
+    }
 
     ret += dispersion * INPUT[Input::DISPERSION_LOW]
         + static_cast<double>(numSpace * INPUT[Input::NUM_SPACE_LOW])

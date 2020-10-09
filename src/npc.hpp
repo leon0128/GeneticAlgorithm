@@ -1,5 +1,9 @@
 #pragma once
 
+#include <deque>
+#include <vector>
+#include <mutex>
+
 #include "actor.hpp"
 
 class NPC : public Actor
@@ -30,36 +34,49 @@ public:
     // その後, NPC::calculate()の呼び出し
     static void startCalculation(EType active,
                                  EType hold,
-                                 std::vector<EType> next,
-                                 std::vector<std::array<class Block*, GAMEBOARD_PARALLEL>> gameState);
+                                 const std::vector<EType> &next,
+                                 const std::vector<std::array<class Block*, GAMEBOARD_PARALLEL>> &gameState);
 
     // メンバ変数の取得
-    static bool isCalculating() {return mIsCalculating;}
-    static struct Result getResult() {return mResult;}
+    static bool isCalculating();
+    static const Result &getResult();
+    // ga
+    static void standCalculationFlag();
+    static std::mutex &mutex()
+        {return mMutex;}
 
 private:
     // 計算し、結果を格納したResult構造体を返す
     static void calculate();
+    
+    // ga
     static void calculateGA();
+    static double supportCalculation(const VirtualGameState &preState
+        , EType active
+        , EType hold
+        , const std::deque<EType> &nextTypes
+        , const std::vector<int> &deletedLines
+        , int depth);
 
     // GameStateを引数の値を元に更新
-    static VirtualGameState updateGameState(VirtualGameState argGameState,
+    static void updateGameState(VirtualGameState &argGameState,
                                             EType type,
                                             int direction,
                                             int coordinate);
     // 初期値のテトロミノの座標を格納した配列を返す
-    static std::array<Vector2, 4> getInitializeTetrominoCoordinate(EType type);
+    static void getInitializeTetrominoCoordinate(EType type
+        , std::array<Vector2, 4> &dst);
     // テトロミノの回転後の座標を返す
-    static std::array<Vector2, 4> getRotationTetrominoCoordinate(std::array<Vector2, 4> tetromino,
+    static void getRotationTetrominoCoordinate(std::array<Vector2, 4> &tetromino,
                                                                  int direction);
     // テトロミノを平行移動させる
-    static std::array<Vector2, 4> getParallelTetrominoCoordinate(std::array<Vector2, 4> tetromino,
+    static void getParallelTetrominoCoordinate(std::array<Vector2, 4> &tetromino,
                                                                  int coordinateX);
     // クイックドロップ後のゲームの状態を返す
-    static VirtualGameState getQuickDropedGameState(VirtualGameState argGameState,
-                                                    std::array<Vector2, 4> tetromino);
+    static void getQuickDropedGameState(VirtualGameState &argGameState,
+        std::array<Vector2, 4> &tetromino);
     // ブロックで満たされている列の削除
-    static VirtualGameState deleteLine(VirtualGameState gameState);
+    static void deleteLine(VirtualGameState &gameState);
 
     // ga
     static int numDeletedLine(const VirtualGameState&);
@@ -69,18 +86,18 @@ private:
                           int x,
                           int leastHeight);
     // gameStateの最も高い位置に存在するブロックの座標を返す
-    static int getMaxHeight(VirtualGameState gameState);
+    static int getMaxHeight(const VirtualGameState &gameState);
     // gameStateの最も低い位置に存在するブロックの座標を返す
     static int getMinHeight(VirtualGameState gameState);
     // 引数のx座標を除いた、最も低い位置にあるxの高さをかエス
     static int getMinHeight(VirtualGameState gameState,
                                 int exclusionX);
     // 空白の数を返す
-    static int getEmptyNumber(VirtualGameState gameState);
+    static int getEmptyNumber(const VirtualGameState &gameState);
     // 各x座標の最大値の分散
-    static double getDispersion(VirtualGameState gameState);
+    static double getDispersion(const VirtualGameState &gameState);
     // 隣接する列との高さを比較し最大のものを返す
-    static int getHeightDifference(VirtualGameState gameState);
+    static int getHeightDifference(const VirtualGameState &gameState);
 
     // mDetailResultVectorの中でemptyが最小のもの以外の削除
     static void deleteNonMinimumEmpty();
@@ -108,4 +125,11 @@ private:
     static std::vector<struct DetailResult> mDetailResultVector;
     // 何回連続で危険な状態か
     static int mDenger;
+
+    // ga
+    static std::mutex mMutex;
+    static std::mutex mTemporaryMutex;
+    static std::mutex mScoreResultsMutex;
+    static double mScoreResults;
+    static Result mTemporaryResult;
 };
