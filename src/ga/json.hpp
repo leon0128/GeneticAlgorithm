@@ -1,6 +1,8 @@
 #ifndef GA_JSON_HPP
 #define GA_JSON_HPP
 
+#include <string>
+
 #include <boost/property_tree/ptree.hpp>
 
 namespace GA
@@ -11,6 +13,9 @@ class Output;
 
 class Json
 {
+private:
+    static const std::string PROPERTY_FILENAME;
+
 public:
     Json();
     ~Json();

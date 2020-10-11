@@ -9,6 +9,8 @@ namespace GA
 class Input
 {
 public:
+    static Input INIT;
+
     enum
     {
         DISPERSION_LOW

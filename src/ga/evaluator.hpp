@@ -12,14 +12,14 @@ namespace GA
 class Evaluator
 {
 public:
-    static const int MAX_NUM_USED_BLOCK;
-    static const int NPC_DEPTH;
+    static int MAX_NUM_USED_BLOCK;
+    static int NPC_DEPTH;
     
-    static const int USED_BLOCK_MULTIPLE;
-    static const int TETRIS_SCORE_MULTIPLE;
-    static const int THREE_LINES_SCORE_MULTIPLE;
-    static const int TWO_LINES_SCORE_MULTIPLE;
-    static const int ONE_LINE_SCORE_MULTIPLE;
+    static int USED_BLOCK_MULTIPLE;
+    static int TETRIS_SCORE_MULTIPLE;
+    static int THREE_LINES_SCORE_MULTIPLE;
+    static int TWO_LINES_SCORE_MULTIPLE;
+    static int ONE_LINE_SCORE_MULTIPLE;
 
     static Input INPUT;
     static Output OUTPUT;

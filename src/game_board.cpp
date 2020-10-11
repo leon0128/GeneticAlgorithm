@@ -61,7 +61,7 @@ GameBoard::GameBoard(Game* game, int order):
 
 GameBoard::~GameBoard()
 {
-    mNPCThread.detach();
+    mNPCThread.join();
     if(mActiveTetrominio)
     {
         for(int i = 0; i < (int)mActiveTetrominio->getBlock().size(); i++)
@@ -368,30 +368,31 @@ void GameBoard::updateGameState()
     int score = atoi(mScores[1].c_str());
     int deletedLine = atoi(mScores[2].c_str());
     int usedMino = atoi(mScores[3].c_str()) + 1;
+    score += GA::Evaluator::USED_BLOCK_MULTIPLE;
     int number;
     switch (filledLine.size())
     {
         case(1):
             deletedLine += 1;
-            score += 1;
+            score += GA::Evaluator::ONE_LINE_SCORE_MULTIPLE;
             number = atoi(mScores[7].c_str()) + 1;
             mScores[7] = std::to_string(number);
             break;
         case(2):
             deletedLine += 2;
-            score += 3;
+            score += GA::Evaluator::TWO_LINES_SCORE_MULTIPLE;
             number = atoi(mScores[6].c_str()) + 1;
             mScores[6] = std::to_string(number);
             break;
         case(3):
             deletedLine += 3;
-            score += 6;
+            score += GA::Evaluator::THREE_LINES_SCORE_MULTIPLE;
             number = atoi(mScores[5].c_str()) + 1;
             mScores[5] = std::to_string(number);
             break;
         case(4):
             deletedLine += 4;
-            score += 10;
+            score += GA::Evaluator::TETRIS_SCORE_MULTIPLE;
             number = atoi(mScores[4].c_str()) + 1;
             mScores[4] = std::to_string(number);
             break;

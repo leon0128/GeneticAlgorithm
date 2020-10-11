@@ -2,6 +2,7 @@
 #include <deque>
 #include <limits>
 #include <utility>
+#include <future>
 #include <algorithm>
 #include <thread>
 
@@ -231,6 +232,8 @@ double NPC::supportCalculation(const VirtualGameState &preState
     , const std::vector<int> &inDeletedLines
     , int depth)
 {
+    static std::vector<std::pair<std::future<double>, Result>> futures;
+
     std::deque<EType> nextTypes(inNextTypes);
     std::vector<int> deletedLines(inDeletedLines);
 
@@ -296,6 +299,23 @@ double NPC::supportCalculation(const VirtualGameState &preState
                         , getHeightDifference(state)
                         , deletedLines);
                 }
+                else if(depth == 1)
+                {
+                    EType tmp = nextTypes.front();
+                    nextTypes.pop_front();
+
+                    futures.emplace_back(std::async(std::launch::async
+                        , supportCalculation
+                        , state
+                        , tmp
+                        , holdType
+                        , nextTypes
+                        , deletedLines
+                        , depth + 1)
+                        , Result{d, c, h ? true : false});
+                
+                    nextTypes.push_front(tmp);
+                }
                 else
                 {
                     EType tmp = nextTypes.front();
@@ -311,19 +331,40 @@ double NPC::supportCalculation(const VirtualGameState &preState
                 }
                 
                 deletedLines.pop_back();
-
+            
                 if(score < ret)
                 {
                     ret = score;
                     if(depth == 1)
                     {
                         mTemporaryMutex.lock();
-                        mTemporaryResult = {d, c, h != 0 ? true : false};
+                        mTemporaryResult = {d, c, h ? true : false};
                         mTemporaryMutex.unlock();
                     }
                 }
             }
         }
+    }
+
+    if(depth == 1
+        && !futures.empty())
+    {
+        std::size_t idx = 0;
+        for(std::size_t i = 0; i < futures.size(); i++)
+        {
+            double score = futures[i].first.get();
+            if(score < ret)
+            {
+                ret = score;
+                idx = i;
+            }
+        }
+
+        mTemporaryMutex.lock();
+        mTemporaryResult = futures[idx].second;
+        mTemporaryMutex.unlock();
+        
+        futures.clear();
     }
 
     return ret;

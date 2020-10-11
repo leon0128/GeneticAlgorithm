@@ -13,26 +13,26 @@ std::string OUTPUT_FILENAME;
 
 GeneticAlgorithm GeneticAlgorithm::GA;
 
-const double GeneticAlgorithm::CROSSOVER_RATE = 0.6;
-const double GeneticAlgorithm::MUTATION_RATE = 0.1;
-const std::size_t GeneticAlgorithm::NUM_ELEMENT = 30;
-const std::size_t GeneticAlgorithm::NUM_GENERATION = 10;
-const bool GeneticAlgorithm::IS_SELECTED_ELITE = true;
-const std::vector<double> GeneticAlgorithm::RANKING_PROBABILITY
+double GeneticAlgorithm::CROSSOVER_RATE = 0.6;
+double GeneticAlgorithm::MUTATION_RATE = 0.1;
+std::size_t GeneticAlgorithm::NUM_ELEMENT = 30;
+std::size_t GeneticAlgorithm::NUM_GENERATION = 10;
+bool GeneticAlgorithm::IS_SELECTED_ELITE = true;
+std::vector<double> GeneticAlgorithm::RANKING_PROBABILITY
     = {0.15 , 0.15, 0.15, 0.15, 0.1, 0.1, 0.1, 0.1};
-const std::size_t GeneticAlgorithm::TOURNAMENT_SIZE = 3;
-const std::size_t GeneticAlgorithm::NUM_ELITE = 2;
-const std::size_t GeneticAlgorithm::NUM_POINT = 3;
-const GeneticAlgorithm::CrossingTag GeneticAlgorithm::CROSSING_TAG = GeneticAlgorithm::CrossingTag::UNIFORM_CROSSING;
-const GeneticAlgorithm::SelectionTag GeneticAlgorithm::SELECTION_TAG = GeneticAlgorithm::SelectionTag::TOURNAMENT_SELECTION;
+std::size_t GeneticAlgorithm::TOURNAMENT_SIZE = 3;
+std::size_t GeneticAlgorithm::NUM_ELITE = 2;
+std::size_t GeneticAlgorithm::NUM_POINT = 3;
+GeneticAlgorithm::CrossingTag GeneticAlgorithm::CROSSING_TAG = GeneticAlgorithm::CrossingTag::UNIFORM_CROSSING;
+GeneticAlgorithm::SelectionTag GeneticAlgorithm::SELECTION_TAG = GeneticAlgorithm::SelectionTag::TOURNAMENT_SELECTION;
 
 GeneticAlgorithm::GeneticAlgorithm()
     : mIOVec()
     , mIdx(0)
     , mGen(1)
+    , mIsInit(false)
     , mJson(new Json())
 {
-    initialize();
 }
 
 GeneticAlgorithm::~GeneticAlgorithm()
@@ -80,6 +80,14 @@ void GeneticAlgorithm::evolve()
 
 void GeneticAlgorithm::setInputToEvaluator()
 {
+    if(!mIsInit)
+    {
+        initialize();
+        mJson->init();
+
+        mIsInit = true;
+    }
+
     if(mIdx == NUM_ELEMENT)
     {
         mIdx = 0;
@@ -87,8 +95,11 @@ void GeneticAlgorithm::setInputToEvaluator()
         evolve();
     }
 
-    // Evaluator::INPUT = mIOVec[mIdx].first;
-    Evaluator::INPUT = Input({5, 100, 1, 0, 50});
+    if(mGen != 1 || mIdx != 0)
+        Evaluator::INPUT = mIOVec[mIdx].first;
+    else
+        Evaluator::INPUT = Input::INIT;
+    // Evaluator::INPUT = Input({5, 100, 1, 0, 80});
 }
 
 void GeneticAlgorithm::getOutputFromEvaluator()

@@ -5,6 +5,8 @@
 namespace GA
 {
 
+Input Input::INIT;
+
 const std::array<int, Input::ARRAY_SIZE> Input::MAX_VALUE
     = {100
         , 100

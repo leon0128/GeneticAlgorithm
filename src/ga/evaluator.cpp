@@ -3,14 +3,14 @@
 namespace GA
 {
 
-const int Evaluator::MAX_NUM_USED_BLOCK = 1000;
-const int Evaluator::NPC_DEPTH = 3;
+int Evaluator::MAX_NUM_USED_BLOCK = 500;
+int Evaluator::NPC_DEPTH = 2;
 
-const int Evaluator::USED_BLOCK_MULTIPLE = 10;
-const int Evaluator::TETRIS_SCORE_MULTIPLE = 64;
-const int Evaluator::THREE_LINES_SCORE_MULTIPLE = 8;
-const int Evaluator::TWO_LINES_SCORE_MULTIPLE = 4;
-const int Evaluator::ONE_LINE_SCORE_MULTIPLE = 1;
+int Evaluator::USED_BLOCK_MULTIPLE = 10;
+int Evaluator::TETRIS_SCORE_MULTIPLE = 64;
+int Evaluator::THREE_LINES_SCORE_MULTIPLE = 8;
+int Evaluator::TWO_LINES_SCORE_MULTIPLE = 4;
+int Evaluator::ONE_LINE_SCORE_MULTIPLE = 1;
 
 Input Evaluator::INPUT = Input();
 Output Evaluator::OUTPUT = Output();
@@ -42,7 +42,7 @@ double Evaluator::evaluate(double dispersion
                 break;
             
             default:;
-                tmp += static_cast<double>(TETRIS_SCORE_MULTIPLE + ONE_LINE_SCORE_MULTIPLE) / 2.0;
+                tmp += static_cast<double>(TETRIS_SCORE_MULTIPLE + THREE_LINES_SCORE_MULTIPLE + TWO_LINES_SCORE_MULTIPLE + ONE_LINE_SCORE_MULTIPLE) / 4.0;
         }
 
         ret += 1.0 / tmp * static_cast<double>(INPUT[Input::NUM_DELETED_LINE]);

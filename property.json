@@ -1,0 +1,35 @@
+{
+    "game_property":
+    {
+        "npc_search_depth": 2,
+        
+        "num_max_used_block": 100000,
+        
+        "used_block_score_multiple": 10,
+        "tetris_score_multiple": 128,
+        "three_lines_score_multiple": 4,
+        "two_lines_score_multiple": 2,
+        "one_line_score_multiple": 1
+    },
+    "genetic_algorithm_property":
+    {
+        "crossover_rate": 0.6,
+        "mutation_rate": 0.1,
+        "num_array_elements": 30,
+        "num_generation": 10,
+        "is_selected_elite": true,
+        "num_selected_elite": 2,
+        "ranking_probability":
+        [
+            0.15, 0.15, 0.15, 0.15, 0.1, 0.1, 0.1, 0.1
+        ],
+        "tournament_size": 3,
+        "num_multi_point": 3,
+        "crossing_tag": 3,
+        "selection_tag": 2
+    },
+    "init_value":
+    [
+        21, 99, 5, 1, 200
+    ]
+}

@@ -23,17 +23,17 @@ public:
 
     static GeneticAlgorithm GA;
 
-    static const double CROSSOVER_RATE;
-    static const double MUTATION_RATE;
-    static const std::size_t NUM_ELEMENT;
-    static const std::size_t NUM_GENERATION;
-    static const bool IS_SELECTED_ELITE;
-    static const std::vector<double> RANKING_PROBABILITY;
-    static const std::size_t TOURNAMENT_SIZE;
-    static const std::size_t NUM_ELITE;
-    static const std::size_t NUM_POINT; // for multi-point crossing
-    static const CrossingTag CROSSING_TAG;
-    static const SelectionTag SELECTION_TAG;
+    static double CROSSOVER_RATE;
+    static double MUTATION_RATE;
+    static std::size_t NUM_ELEMENT;
+    static std::size_t NUM_GENERATION;
+    static bool IS_SELECTED_ELITE;
+    static std::vector<double> RANKING_PROBABILITY;
+    static std::size_t TOURNAMENT_SIZE;
+    static std::size_t NUM_ELITE;
+    static std::size_t NUM_POINT; // for multi-point crossing
+    static CrossingTag CROSSING_TAG;
+    static SelectionTag SELECTION_TAG;
 
     GeneticAlgorithm();
     ~GeneticAlgorithm();
@@ -59,6 +59,7 @@ private:
     std::size_t mIdx;
     std::size_t mGen;
 
+    bool mIsInit;
     Json *mJson;
 };
 
