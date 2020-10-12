@@ -72,12 +72,15 @@
 
 - 初期値
     
+	\[1-1-1-1-1\]
     ![\[1-1-1-1-1\]](https://github.com/leon0128/GeneticAlgorithm/blob/media/ga_gen1(1-1-1-1-1).gif)
 
 - 要素数30、エリート数2、一様交叉、トーナメント選択(大きさ3)、交叉確率0.6、突然変異確率0.1の時、13世代目の最高評価
-
+	
+	\[19-65-18-0-60\]
     ![\[19-65-18-0-60\]](https://github.com/leon0128/GeneticAlgorithm/blob/media/ga_gen13(19-65-18-0-60).gif)
 
 - 自分で設定した値
-
+	
+	\[10-49-5-1-99\]
     ![\[10-49-5-1-99\]](https://github.com/leon0128/GeneticAlgorithm/blob/media/ga_self(10-49-5-1-99).gif)
