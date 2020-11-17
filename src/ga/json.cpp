@@ -60,7 +60,7 @@ void Json::init()
     std::size_t i = 0;
     for(auto &&c : ptree.get_child("init_value"))
     {
-        Input::INIT[i] = std::stoi(c.second.data());
+        Input::INIT[i] = std::stod(c.second.data());
         i++;
     }
 

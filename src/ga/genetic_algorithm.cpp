@@ -1,4 +1,7 @@
 #include <map>
+#include <limits>
+#include <ios>
+#include <iomanip>
 #include <iostream>
 
 #include "json.hpp"
@@ -42,6 +45,9 @@ GeneticAlgorithm::~GeneticAlgorithm()
 
 void GeneticAlgorithm::initialize()
 {
+    std::cout
+        << std::setprecision(std::numeric_limits<double>::max_digits10);
+
     for(std::size_t i = 0; i < NUM_ELEMENT; i++)
         mIOVec.emplace_back(generateRandom(), Output());
 }
@@ -74,6 +80,8 @@ void GeneticAlgorithm::evolve()
         else
             nextIO.emplace_back(select(), Output());
     }
+
+    mutateDuplicateElements(nextIO);
 
     mIOVec.swap(nextIO);
 }
@@ -195,11 +203,11 @@ Input GeneticAlgorithm::select() const
 
 Input GeneticAlgorithm::generateRandom() const
 {
-    Input ret = Input({static_cast<int>(Random::random() * Input::MAX_VALUE[Input::DISPERSION_LOW])
-        , static_cast<int>(Random::random() * Input::MAX_VALUE[Input::NUM_SPACE_LOW])
-        , static_cast<int>(Random::random() * Input::MAX_VALUE[Input::MAX_HEIGHT_LOW])
-        , static_cast<int>(Random::random() * Input::MAX_VALUE[Input::DIFFERENCE_LOW])
-        , static_cast<int>(Random::random() * Input::MAX_VALUE[Input::NUM_DELETED_LINE])});
+    Input ret = Input({Random::random()
+        , Random::random()
+        , Random::random()
+        , Random::random()
+        , Random::random()});
 
     std::cout << "gen-random:\n"
         "    ";
@@ -318,6 +326,15 @@ Input GeneticAlgorithm::generateMutation(const Input &src) const
     ret.print();
 
     return ret;
+}
+
+void GeneticAlgorithm::mutateDuplicateElements(std::vector<std::pair<Input, Output>> &iovec)
+{
+    for(std::size_t i = 1; i < iovec.size(); i++)
+    {
+        if(iovec[0].first.array == iovec[i].first.array)
+            iovec[i].first[static_cast<std::size_t>(Random::random() * iovec[i].first.array.size())] = Random::random();
+    }
 }
 
 }

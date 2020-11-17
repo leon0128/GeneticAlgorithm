@@ -3,6 +3,6 @@
 namespace GA
 {
 
-Random Random::random;
+    Random Random::random;
 
 }

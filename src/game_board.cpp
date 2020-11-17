@@ -241,13 +241,16 @@ void GameBoard::pickTetromino()
     {
         mNextBoard[i]->setType(mNextBoard[i+1]->getType());
     }
-    type = mPendingTetromino[rand() % mPendingTetromino.size()];
-    mNextBoard[NEXT_SIZE - 1]->setType(type);
+    // type = mPendingTetromino[rand() % mPendingTetromino.size()];
+    // mNextBoard[NEXT_SIZE - 1]->setType(type);
 
-    auto iterator = std::find(mPendingTetromino.begin(),
-                              mPendingTetromino.end(),
-                              type);
-    mPendingTetromino.erase(iterator);
+    // auto iterator = std::find(mPendingTetromino.begin(),
+    //                           mPendingTetromino.end(),
+    //                           type);
+    // mPendingTetromino.erase(iterator);
+    type = mPendingTetromino.front();
+    mNextBoard[NEXT_SIZE - 1]->setType(type);
+    mPendingTetromino.erase(mPendingTetromino.begin());
 
     // NPCが存在し、計算をしていないなら計算開始
     if(!NPC::isCalculating() && !mIsHolded)
@@ -531,13 +534,17 @@ void GameBoard::initializeNextBoard()
     // nextの設定
     for(int i = 0; i < NEXT_SIZE; i++)
     {
-        EType type = mPendingTetromino[rand() % mPendingTetromino.size()];
-        mNextBoard[i]->setType(type);
+        // EType type = mPendingTetromino[rand() % mPendingTetromino.size()];
+        // mNextBoard[i]->setType(type);
 
-        auto iterator = std::find(mPendingTetromino.begin(),
-                                mPendingTetromino.end(),
-                                type);
-        mPendingTetromino.erase(iterator);
+        // auto iterator = std::find(mPendingTetromino.begin(),
+        //                         mPendingTetromino.end(),
+        //                         type);
+        // mPendingTetromino.erase(iterator);
+
+        EType type = mPendingTetromino.front();
+        mNextBoard[i]->setType(type);
+        mPendingTetromino.erase(mPendingTetromino.begin());
     }
 }
 

@@ -21,20 +21,20 @@ public:
         , ARRAY_SIZE
     };
 
-    static const std::array<int, ARRAY_SIZE> MAX_VALUE;
+    static const std::array<double, ARRAY_SIZE> MAX_VALUE;
 
 
-    constexpr Input(const std::array<int, ARRAY_SIZE> &inArr = std::array<int, ARRAY_SIZE>()) noexcept
+    constexpr Input(const std::array<double, ARRAY_SIZE> &inArr = std::array<double, ARRAY_SIZE>()) noexcept
         : array(inArr){}
     
     void print() const;
 
-    int &operator [](std::size_t idx)
+    double &operator [](std::size_t idx)
         {return array[idx];}
-    const int &operator [](std::size_t idx) const
+    const double &operator [](std::size_t idx) const
         {return array[idx];}
 
-    std::array<int, ARRAY_SIZE> array;
+    std::array<double, ARRAY_SIZE> array;
 };
 
 }

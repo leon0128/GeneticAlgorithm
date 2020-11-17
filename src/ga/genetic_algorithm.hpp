@@ -55,6 +55,8 @@ private:
     Input generateCrossing(const Input&, const Input&) const;
     Input generateMutation(const Input&) const;
 
+    void mutateDuplicateElements(std::vector<std::pair<Input, Output>>&);
+
     std::vector<std::pair<Input, Output>> mIOVec;
     std::size_t mIdx;
     std::size_t mGen;
