@@ -3,18 +3,6 @@
 namespace GA
 {
 
-int Evaluator::MAX_NUM_USED_BLOCK = 500;
-int Evaluator::NPC_DEPTH = 2;
-
-int Evaluator::USED_BLOCK_MULTIPLE = 10;
-int Evaluator::TETRIS_SCORE_MULTIPLE = 64;
-int Evaluator::THREE_LINES_SCORE_MULTIPLE = 8;
-int Evaluator::TWO_LINES_SCORE_MULTIPLE = 4;
-int Evaluator::ONE_LINE_SCORE_MULTIPLE = 1;
-
-Input Evaluator::INPUT = Input();
-Output Evaluator::OUTPUT = Output();
-
 double Evaluator::evaluate(double dispersion
     , int numSpace
     , int maxHeight

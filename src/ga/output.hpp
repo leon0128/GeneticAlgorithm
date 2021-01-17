@@ -2,6 +2,7 @@
 #define GA_OUTPUT_HPP
 
 #include <array>
+#include <string>
 
 namespace GA
 {
@@ -9,6 +10,8 @@ namespace GA
 class Output
 {
 public:
+    static Output INIT;
+
     enum
     {
         NUM_USED_BLOCK
@@ -19,10 +22,10 @@ public:
         , ARRAY_SIZE
     };
 
-    constexpr Output(const std::array<int, ARRAY_SIZE> &inArr = std::array<int, ARRAY_SIZE>())
+    Output(const std::array<int, ARRAY_SIZE> &inArr = std::array<int, ARRAY_SIZE>())
         : array(inArr){}
     
-    void print() const;
+    std::string str() const;
 
     int &operator [](std::size_t idx)
         {return array[idx];}

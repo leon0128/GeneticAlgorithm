@@ -24,6 +24,9 @@ public:
         return std::generate_canonical<double, std::numeric_limits<double>::digits>(mEngine);
     }
 
+    std::mt19937_64 &engine()
+        {return mEngine;}
+
 private:
     std::mt19937_64 mEngine;
 };

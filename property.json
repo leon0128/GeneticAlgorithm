@@ -15,7 +15,7 @@
     {
         "crossover_rate": 0.6,
         "mutation_rate": 0.1,
-        "num_array_elements": 20,
+        "num_array_elements": 10,
         "num_generation": 10,
         "is_selected_elite": true,
         "num_selected_elite": 1,
@@ -30,6 +30,10 @@
     },
     "init_value":
     [
-        0.0, 0.0, 0.0, 0.0, 0.0
+        0.025026958168563984,
+        0.91225696996898376,
+        0.074368688586537446,
+        0.0023934825862662263,
+        0.75180058608984124
     ]
 }

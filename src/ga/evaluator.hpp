@@ -12,17 +12,17 @@ namespace GA
 class Evaluator
 {
 public:
-    static int MAX_NUM_USED_BLOCK;
-    static int NPC_DEPTH;
+    inline static int MAX_NUM_USED_BLOCK = 500;
+    inline static int NPC_DEPTH = 2;
     
-    static int USED_BLOCK_MULTIPLE;
-    static int TETRIS_SCORE_MULTIPLE;
-    static int THREE_LINES_SCORE_MULTIPLE;
-    static int TWO_LINES_SCORE_MULTIPLE;
-    static int ONE_LINE_SCORE_MULTIPLE;
+    inline static int USED_BLOCK_MULTIPLE = 10;
+    inline static int TETRIS_SCORE_MULTIPLE = 64;
+    inline static int THREE_LINES_SCORE_MULTIPLE = 8;
+    inline static int TWO_LINES_SCORE_MULTIPLE = 4;
+    inline static int ONE_LINE_SCORE_MULTIPLE = 1;
 
-    static Input INPUT;
-    static Output OUTPUT;
+    inline static Input INPUT = Input::INIT;
+    inline static Output OUTPUT = Output::INIT;
 
     Evaluator() = delete;
 

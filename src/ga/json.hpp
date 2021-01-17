@@ -14,7 +14,7 @@ class Output;
 class Json
 {
 private:
-    static const std::string PROPERTY_FILENAME;
+    inline static const std::string PROPERTY_FILENAME = "property.json";
 
 public:
     Json();
@@ -29,8 +29,6 @@ public:
         , const Output&);
 
 private:
-    bool mIsInitialized;
-
     boost::property_tree::ptree mPtree;
     boost::property_tree::ptree mChild;
 };

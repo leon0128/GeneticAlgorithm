@@ -2,6 +2,8 @@
 #define GA_INPUT_HPP
 
 #include <array>
+#include <utility>
+#include <string>
 
 namespace GA
 {
@@ -21,13 +23,10 @@ public:
         , ARRAY_SIZE
     };
 
-    static const std::array<double, ARRAY_SIZE> MAX_VALUE;
-
-
-    constexpr Input(const std::array<double, ARRAY_SIZE> &inArr = std::array<double, ARRAY_SIZE>()) noexcept
+    Input(const std::array<double, ARRAY_SIZE> &inArr = std::array<double, ARRAY_SIZE>())
         : array(inArr){}
     
-    void print() const;
+    std::string str() const;
 
     double &operator [](std::size_t idx)
         {return array[idx];}

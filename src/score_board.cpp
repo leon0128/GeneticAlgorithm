@@ -69,12 +69,12 @@ void ScoreBoard::printScore()
     message.push_back("   2 LINES  :");
     message.push_back("   1 LINE   :");
 
-    SDL_Log("=====RESULT=====");
-    for(int i = 0; i < (int)message.size(); i++)
-    {
-        SDL_Log("%s %s", message[i].c_str(), scores[i].c_str());
-    }
-    SDL_Log("================");
+    // SDL_Log("=====RESULT=====");
+    // for(int i = 0; i < (int)message.size(); i++)
+    // {
+    //     SDL_Log("%s %s", message[i].c_str(), scores[i].c_str());
+    // }
+    // SDL_Log("================");
 }
 
 void ScoreBoard::createDescriptionTexture()

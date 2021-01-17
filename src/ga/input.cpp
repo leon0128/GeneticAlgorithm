@@ -6,24 +6,23 @@
 namespace GA
 {
 
-Input Input::INIT;
+Input Input::INIT = Input({0.0, 0.0, 0.0, 0.0, 0.0});
 
-const std::array<double, Input::ARRAY_SIZE> Input::MAX_VALUE
-    = {1.0
-        , 1.0
-        , 1.0
-        , 1.0
-        , 1.0};
-
-void Input::print() const
+std::string Input::str() const
 {
-    std::cout << "input: {";
-
-    for(auto &&i : array)
-        std::cout << i << ", ";
+    std::string ret = "input: [";
+    if(!array.empty())
+        ret += std::to_string(array.front());
     
-    std::cout << "}\n"
-        << std::flush;
+    for(std::size_t i = 1; i < array.size(); i++)
+    {
+        ret += ", ";
+        ret += std::to_string(array[i]);
+    }
+
+    ret.push_back(']');
+    
+    return ret;
 }
 
 }

@@ -5,15 +5,23 @@
 namespace GA
 {
 
-void Output::print() const
-{
-    std::cout << "output: {";
+Output Output::INIT = Output({0, 0, 0, 0, 0});
 
-    for(auto &&i : array)
-        std::cout << i << ", ";
+std::string Output::str() const
+{
+    std::string ret = "output: [";
+    if(!array.empty())
+        ret += std::to_string(array.front());
     
-    std::cout << "}\n"
-        << std::flush;
+    for(std::size_t i = 1; i < array.size(); i++)
+    {
+        ret += ", ";
+        ret += std::to_string(array[i]);
+    }
+
+    ret.push_back(']');
+
+    return ret;
 }
 
 }

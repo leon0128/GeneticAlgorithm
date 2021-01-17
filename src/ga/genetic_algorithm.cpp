@@ -1,5 +1,7 @@
 #include <map>
 #include <limits>
+#include <numeric>
+#include <algorithm>
 #include <ios>
 #include <iomanip>
 #include <iostream>
@@ -34,22 +36,32 @@ GeneticAlgorithm::GeneticAlgorithm()
     , mIdx(0)
     , mGen(1)
     , mIsInit(false)
-    , mJson(new Json())
+    , mJson(nullptr)
 {
 }
 
 GeneticAlgorithm::~GeneticAlgorithm()
 {
-    delete mJson;
+    if(mJson != nullptr)
+        delete mJson;
 }
 
 void GeneticAlgorithm::initialize()
 {
+    mJson = new Json();
+
     std::cout
         << std::setprecision(std::numeric_limits<double>::max_digits10);
 
-    for(std::size_t i = 0; i < NUM_ELEMENT; i++)
-        mIOVec.emplace_back(generateRandom(), Output());
+    if(NUM_ELEMENT >= 1)
+        mIOVec.emplace_back(Input::INIT, Output::INIT);
+
+    for(std::size_t i = 1; i < NUM_ELEMENT; i++)
+        // mIOVec.emplace_back(generateRandom(), Output::INIT);
+        mIOVec.emplace_back(Input::INIT, Output::INIT);
+    
+    mutateDuplicateElements(mIOVec);
+    // mutateTop(mIOVec);
 }
 
 void GeneticAlgorithm::evolve()
@@ -66,7 +78,7 @@ void GeneticAlgorithm::evolve()
         for(auto &&iter = map.rbegin();
             iter != map.rend() && idx < NUM_ELITE;
             iter++, idx++)
-            nextIO.emplace_back(iter->second, Output());
+            nextIO.emplace_back(iter->second, Output::INIT);
     }
 
     for(std::size_t i = nextIO.size(); i < NUM_ELEMENT; i++)
@@ -74,14 +86,15 @@ void GeneticAlgorithm::evolve()
         double rand = Random::random();
         double prob = 0.0;
         if((prob += CROSSOVER_RATE) > rand)
-            nextIO.emplace_back(generateCrossing(select(), select()), Output());
+            nextIO.emplace_back(generateCrossing(select(), select()), Output::INIT);
         else if((prob += MUTATION_RATE) > rand)
-            nextIO.emplace_back(generateMutation(select()), Output());
+            nextIO.emplace_back(generateMutation(select()), Output::INIT);
         else
-            nextIO.emplace_back(select(), Output());
+            nextIO.emplace_back(select(), Output::INIT);
     }
 
     mutateDuplicateElements(nextIO);
+    // mutateTop(nextIO);
 
     mIOVec.swap(nextIO);
 }
@@ -91,7 +104,15 @@ void GeneticAlgorithm::setInputToEvaluator()
     if(!mIsInit)
     {
         initialize();
-        mJson->init();
+
+        std::cout << "gen: " << mGen << "\n";
+        for(std::size_t i = 0; i < mIOVec.size(); i++)
+        {
+            std::cout << "    " << i << ": "
+                << mIOVec[i].first.str() << "\n";
+        }
+
+        std::cout << std::endl;
 
         mIsInit = true;
     }
@@ -101,12 +122,18 @@ void GeneticAlgorithm::setInputToEvaluator()
         mIdx = 0;
         mGen++;
         evolve();
+
+        std::cout << "gen: " << mGen << "\n";
+        for(std::size_t i = 0; i < mIOVec.size(); i++)
+        {
+            std::cout << "    " << i << ": "
+                << mIOVec[i].first.str() << "\n";
+        }
+
+        std::cout << std::endl;
     }
 
-    if(mGen != 1 || mIdx != 0)
-        Evaluator::INPUT = mIOVec[mIdx].first;
-    else
-        Evaluator::INPUT = Input::INIT;
+    Evaluator::INPUT = mIOVec[mIdx].first;
     // Evaluator::INPUT = Input({5, 100, 1, 0, 80});
 }
 
@@ -194,10 +221,6 @@ Input GeneticAlgorithm::select() const
         }
     }
 
-    std::cout << "select:\n"
-        "    ";
-    ret.print();
-
     return ret;
 }
 
@@ -208,10 +231,6 @@ Input GeneticAlgorithm::generateRandom() const
         , Random::random()
         , Random::random()
         , Random::random()});
-
-    std::cout << "gen-random:\n"
-        "    ";
-    ret.print();
 
     return ret;
 }
@@ -306,34 +325,42 @@ Input GeneticAlgorithm::generateCrossing(const Input &lhs, const Input &rhs) con
         }
     }
 
-    std::cout << "gen-crossing:\n"
-        "    ";
-    lhs.print();
-    std::cout << "    ";
-    rhs.print();
-    std::cout << "    ";
-    ret.print();
-
     return ret;
 }
 
 Input GeneticAlgorithm::generateMutation(const Input &src) const
 {
     Input ret = generateRandom();
-    
-    std::cout << "gen-mutation:\n"
-        "    ";
-    ret.print();
 
     return ret;
 }
 
 void GeneticAlgorithm::mutateDuplicateElements(std::vector<std::pair<Input, Output>> &iovec)
 {
+    for(std::size_t i = 0; i < iovec.size(); i++)
+    {
+        for(std::size_t j = 0; j < i; j++)
+        {
+            if(iovec[j].first.array == iovec[i].first.array)
+                iovec[i].first[static_cast<std::size_t>(Random::random() * static_cast<double>(Input::ARRAY_SIZE))] = Random::random();
+        }
+    }
+}
+
+void GeneticAlgorithm::mutateTop(std::vector<std::pair<Input, Output>> &iovec)
+{
+    std::vector<std::size_t> iota(static_cast<std::size_t>(Input::ARRAY_SIZE));
+    std::iota(iota.begin(), iota.end(), 0);
+
     for(std::size_t i = 1; i < iovec.size(); i++)
     {
-        if(iovec[0].first.array == iovec[i].first.array)
-            iovec[i].first[static_cast<std::size_t>(Random::random() * iovec[i].first.array.size())] = Random::random();
+        iovec[i].first.array = iovec.front().first.array;
+
+        std::shuffle(iota.begin(), iota.end(), Random::random.engine());
+        std::size_t num = static_cast<std::size_t>(Random::random() * static_cast<double>(Input::ARRAY_SIZE - 1)) + 1;
+        
+        for(std::size_t j = 0; j < num; j++)
+            iovec[i].first.array[iota[j]] = Random::random();
     }
 }
 

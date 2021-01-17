@@ -56,6 +56,7 @@ private:
     Input generateMutation(const Input&) const;
 
     void mutateDuplicateElements(std::vector<std::pair<Input, Output>>&);
+    void mutateTop(std::vector<std::pair<Input, Output>>&);
 
     std::vector<std::pair<Input, Output>> mIOVec;
     std::size_t mIdx;
